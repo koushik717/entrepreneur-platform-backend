@@ -1,0 +1,30 @@
+# .gitignore
+
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# Database
+db.sqlite3
+*.sqlite3-journal
+
+# Media files (user uploads) - will be empty for now, but good practice
+media/
+
+# IDE specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Django specific
+local_settings.py  # If you create one for local specific settings
+*/migrations/0*.py
+# Sensitive data (e.g. from debug pages)
+*.log
+*.pot

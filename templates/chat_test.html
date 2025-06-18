@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Koushik's Chat Test</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #chat-log { width: 100%; max-width: 800px; height: 300px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; resize: vertical; margin-bottom: 10px; }
+        #chat-message-input { width: 100%; max-width: 700px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; }
+        #chat-message-submit { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; margin-left: 10px; }
+        .container { display: flex; align-items: center; }
+    </style>
+</head>
+<body>
+    <h1>My Instant Chat Test</h1>
+    <textarea id="chat-log" readonly></textarea><br/>
+    <div class="container">
+        <input id="chat-message-input" type="text" placeholder="Type your message here..." /><br/>
+        <input id="chat-message-submit" type="button" value="Send"/>
+    </div>
+
+    <script>
+        // --- IMPORTANT: Room Name ---
+        // This is the name of the chat room we are connecting to.
+        // All browsers connected to the same roomName will see each other's messages.
+        const roomName = 'general'; // You can change this name!
+
+        // Get references to our HTML elements
+        const chatLog = document.querySelector('#chat-log');
+        const chatMessageInput = document.querySelector('#chat-message-input');
+        const chatMessageSubmit = document.querySelector('#chat-message-submit');
+
+        // --- ESTABLISH THE WEBSOCKET CONNECTION ---
+        // Now, this HTML file is served by Django, so window.location.host will correctly
+        // be '127.0.0.1:8000'. This allows the WebSocket to share session cookies and authenticate.
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
+        );
+
+        // --- EVENT LISTENERS FOR THE WEBSOCKET ---
+
+        // What to do when the WebSocket connection successfully opens
+        chatSocket.onopen = function(e) {
+            chatLog.value += ">>> WebSocket connected to room: " + roomName + "\n";
+            console.log("WebSocket connected:", e);
+        };
+
+        // What to do when the WebSocket connection receives a message
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            chatLog.value += (data.message + '\n');
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+        };
+
+        // What to do if the WebSocket connection closes unexpectedly
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly:', e);
+            chatLog.value += "<<< WebSocket disconnected.\n";
+        };
+
+        // What to do if there's an error with the WebSocket
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket Error:', e);
+            chatLog.value += "<<< WebSocket Error!\n";
+        };
+
+
+        // --- EVENT LISTENERS FOR THE INPUT FIELD AND BUTTON ---
+
+        // Automatically focus on the input field when the page loads
+        chatMessageInput.focus();
+
+        // When the user presses Enter in the input field, simulate a click on the Send button
+        chatMessageInput.onkeyup = function(e) {
+            if (e.keyCode === 13) {  // 13 is the key code for 'Enter'
+                chatMessageSubmit.click();
+            }
+        };
+
+        // When the Send button is clicked
+        chatMessageSubmit.onclick = function(e) {
+            const message = chatMessageInput.value;
+            if (message.trim() === '') return; // Don't send empty messages
+
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            chatMessageInput.value = ''; // Clear the input field after sending
+        };
+    </script>
+</body>
+</html>
