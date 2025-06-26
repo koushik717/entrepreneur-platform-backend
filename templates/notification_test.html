@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Navya's Notification Test</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #notification-log {
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Instant Notification Test</h1>
+    <p>This page listens for real-time notifications for the logged-in user.</p>
+    <textarea id="notification-log" readonly></textarea>
+
+    <script>
+        // --- IMPORTANT: User ID ---
+        // This will be dynamically set by Django on the server side
+        // using the logged-in user's ID.
+        const userId = "{{ request.user.id }}"; // Django template tag to get user ID
+
+        const notificationLog = document.querySelector('#notification-log');
+
+        if (!userId || userId === "None") { // Check if user is not logged in
+            notificationLog.value += "<<< NOT CONNECTED: Please log in first and access this page via Django server (e.g., http://127.0.0.1:8000/notifications/test/).\n";
+            console.error("User not logged in or ID not available.");
+        } else {
+            // --- ESTABLISH THE WEBSOCKET CONNECTION ---
+            // Connecting to the user-specific notification channel
+            const notificationSocket = new WebSocket(
+                'ws://' + window.location.host + '/ws/notifications/' + userId + '/'
+            );
+
+            // --- EVENT LISTENERS FOR THE WEBSOCKET ---
+            notificationSocket.onopen = function(e) {
+                notificationLog.value += `>>> WebSocket connected for user ID: ${userId}\n`;
+                console.log("Notification WebSocket connected:", e);
+            };
+
+            notificationSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                // Display the received notification data
+                notificationLog.value += `[NEW NOTIFICATION] ${JSON.stringify(data, null, 2)}\n`;
+                notificationLog.scrollTop = notificationLog.scrollHeight;
+                console.log("Notification received:", data);
+            };
+
+            notificationSocket.onclose = function(e) {
+                console.error('Notification socket closed unexpectedly:', e);
+                notificationLog.value += "<<< Notification WebSocket disconnected.\n";
+            };
+
+            notificationSocket.onerror = function(e) {
+                console.error('Notification WebSocket Error:', e);
+                notificationLog.value += "<<< Notification WebSocket Error!\n";
+            };
+        }
+    </script>
+</body>
+</html>

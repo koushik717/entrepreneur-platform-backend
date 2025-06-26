@@ -5,7 +5,18 @@
     <title>Koushik's Chat Test</title>
     <style>
         body { font-family: sans-serif; margin: 20px; }
-        #chat-log { width: 100%; max-width: 800px; height: 300px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; resize: vertical; margin-bottom: 10px; }
+        #chat-log {
+            width: 100%;
+            max-width: 800px;
+            height: 300px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            margin-bottom: 10px;
+            white-space: pre-wrap; /* Ensures newlines in message are displayed */
+            font-family: monospace; /* Better for displaying code-like messages */
+        }
         #chat-message-input { width: 100%; max-width: 700px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; }
         #chat-message-submit { padding: 8px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; margin-left: 10px; }
         .container { display: flex; align-items: center; }
@@ -22,7 +33,7 @@
     <script>
         // --- IMPORTANT: Room Name ---
         // This is the name of the chat room we are connecting to.
-        // All browsers connected to the same roomName will see each other's messages.
+        // Make sure this matches the 'name' of a ChatRoom you created in Django Admin.
         const roomName = 'general'; // You can change this name!
 
         // Get references to our HTML elements
@@ -31,8 +42,6 @@
         const chatMessageSubmit = document.querySelector('#chat-message-submit');
 
         // --- ESTABLISH THE WEBSOCKET CONNECTION ---
-        // Now, this HTML file is served by Django, so window.location.host will correctly
-        // be '127.0.0.1:8000'. This allows the WebSocket to share session cookies and authenticate.
         const chatSocket = new WebSocket(
             'ws://' + window.location.host + '/ws/chat/' + roomName + '/'
         );
@@ -48,7 +57,23 @@
         // What to do when the WebSocket connection receives a message
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            chatLog.value += (data.message + '\n');
+
+            // --- UPDATED LOGIC TO DISPLAY SENDER ID AND TIMESTAMP ---
+            let messageToDisplay = data.message;
+            if (data.timestamp) {
+                // Format timestamp nicely
+                const date = new Date(data.timestamp);
+                const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageToDisplay = `[${timeString}] ${messageToDisplay}`;
+            }
+            // If you want to include sender ID for debugging, uncomment the next line
+            // if (data.sender_id) {
+            //     messageToDisplay = `(ID:${data.sender_id}) ${messageToDisplay}`;
+            // }
+
+            chatLog.value += (messageToDisplay + '\n'); // Display the formatted message
+            // --- END UPDATED LOGIC ---
+
             chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
         };
 

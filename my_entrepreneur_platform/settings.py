@@ -43,7 +43,8 @@ INSTALLED_APPS = [
 
     # Our Project Apps:
     'channels',        # <--- ADDED LINE: For real-time functionality
-    'chat',            # <--- ADDED LINE: Our chat application
+    'chat',
+    'notifications',                         # <--- ADDED LINE: Our chat application
     # 'users',         # <--- You might add your 'users' app here if you create it
     # 'notifications', # <--- You might add your 'notifications' app here later
 ]
