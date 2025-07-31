@@ -5,6 +5,6 @@ from django.urls import re_path
 from . import consumers # This imports your chat bot
 
 websocket_urlpatterns = [
-    # This matches the WebSocket URL from your test_chat_client.html
-    re_path(r'ws/chat/(?P<room_name>\w+)/$', consumers.ChatConsumer.as_asgi()),
+    # This pattern only matches the part *after* "ws/chat/" from asgi.py
+    re_path(r'(?P<room_name>\w+)/$', consumers.ChatConsumer.as_asgi()),
 ]
